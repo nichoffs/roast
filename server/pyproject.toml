@@ -3,9 +3,16 @@ name = "server"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.21.0",
+    "databases>=0.9.0",
+    "deepface>=0.0.93",
+    "elevenlabs>=1.56.0",
+    "fastapi[standard]>=0.115.12",
     "python-fasthtml>=0.12.9",
+    "requests>=2.32.3",
+    "tf-keras>=2.19.0",
 ]
 
 [build-system]
