@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roast Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-container, .data-container {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Roast Generator</h1>
+
+    <!-- Add Roastee Form -->
+    <div class="form-container">
+        <h2>Add a Roastee</h2>
+        <form id="roasteeForm" enctype="multipart/form-data">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="photos">Photos:</label>
+            <input type="file" id="photos" name="photos" multiple accept="image/*" required>
+            <button type="submit">Add Roastee</button>
+        </form>
+    </div>
+
+    <!-- Add Roast Form -->
+    <div class="form-container">
+        <h2>Add a Roast</h2>
+        <form id="roastForm">
+            <label for="roastee_id">Select Roastee:</label>
+            <select id="roastee_id" name="roastee_id" required>
+                <option value="">-- Select a Roastee --</option>
+            </select>
+            <label for="roast_text">Roast Text:</label>
+            <textarea id="roast_text" name="roast_text" rows="4" required></textarea>
+            <button type="submit">Add Roast</button>
+        </form>
+    </div>
+
+    <!-- Display Roastees and Roasts -->
+    <div class="data-container">
+        <h2>Roastees and Roasts</h2>
+        <div id="roasteeData"></div>
+    </div>
+
+    <!-- Response Area -->
+    <div id="response"></div>
+
+    <script>
+        // Fetch and display roastees and roasts
+        async function loadData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            const dataDiv = document.getElementById('roasteeData');
+            dataDiv.innerHTML = '';
+            data.forEach(roastee => {
+                const roasteeDiv = document.createElement('div');
+                roasteeDiv.innerHTML = `<h3>${roastee.name} (ID: ${roastee.id})</h3>`;
+                if (roastee.roasts.length > 0) {
+                    const ul = document.createElement('ul');
+                    roastee.roasts.forEach(roast => {
+                        const li = document.createElement('li');
+                        li.textContent = roast;
+                        ul.appendChild(li);
+                    });
+                    roasteeDiv.appendChild(ul);
+                } else {
+                    roasteeDiv.innerHTML += '<p>No roasts yet.</p>';
+                }
+                dataDiv.appendChild(roasteeDiv);
+            });
+            loadRoastees(); // Update dropdown
+        }
+
+        // Fetch roastees for dropdown
+        async function loadRoastees() {
+            const response = await fetch('/roastees_list');
+            const roastees = await response.json();
+            const select = document.getElementById('roastee_id');
+            select.innerHTML = '<option value="">-- Select a Roastee --</option>';
+            roastees.forEach(roastee => {
+                const option = document.createElement('option');
+                option.value = roastee.id;
+                option.textContent = roastee.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Handle roastee form submission
+        document.getElementById('roasteeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/roastees/', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            showResponse(result.message, response.ok);
+            if (response.ok) {
+                loadData();
+                e.target.reset(); // Clear form
+            }
+        });
+
+        // Handle roast form submission
+        document.getElementById('roastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/roasts/', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            showResponse(result.message, response.ok);
+            if (response.ok) {
+                loadData();
+                e.target.reset(); // Clear form
+            }
+        });
+
+        // Display response
+        function showResponse(message, success) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = message;
+            responseDiv.className = success ? 'success' : 'error';
+            setTimeout(() => responseDiv.textContent = '', 3000); // Clear after 3s
+        }
+
+        // Load data on page load
+        window.onload = loadData;
+    </script>
+</body>
+</html>
