@@ -2,3 +2,4 @@
 **/*.db
 **/.venv
 **/.jpg
+**/db_path
